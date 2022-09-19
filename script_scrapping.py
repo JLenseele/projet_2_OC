@@ -4,7 +4,7 @@ import csv
 
 #def is_long_string(string):
 #   return len(string) > 200
-def ecriture(nom_fichier, url, upc, title, price_including_tax, price_excluding_tax, number_available, product_description, category, review_rating, image_url ):
+def ecriture(datas, nom_fichier):
 
 	en_tete = ['product_page_url'
 				,'universal_product_code (upc)'
@@ -17,13 +17,11 @@ def ecriture(nom_fichier, url, upc, title, price_including_tax, price_excluding_
 				,'review_rating'
 				,'image_url']
 	
-	data = [url, upc, title, price_including_tax, price_excluding_tax, number_available, product_description, category, review_rating, image_url]
-	
-	with open(nom_fichier, 'w') as fichier_csv:
+	with open(nom_fichier, 'w', encoding="utf-8") as fichier_csv:
 		writer = csv.writer(fichier_csv, delimiter=',')
 		writer.writerow(en_tete)
-		# zip permet d'itérer sur deux listes à la fois
-		writer.writerow(data)
+		for data in datas:
+			writer.writerow(data)
 
 	pass
 	
@@ -63,18 +61,54 @@ def rate(soup):
 		pass
 
 	return rating
-	
 
-def etl():
-	#page à recuperer
-	url = "http://books.toscrape.com/catalogue/scott-pilgrims-precious-little-life-scott-pilgrim-1_987/index.html"
+def listing_url_page_produit(url_section):
+
+	url_section_liste = []
+	links_produit = []
+	url_section_liste.append(url_section)
+
+	reponse = requests.get(url_section)
+	page_produit = reponse.content
+	soup = BeautifulSoup(page_produit, 'html.parser')
+	
+	# vérification de l'existence d'autre page de la même section
+	other_pages = soup.find('li', class_="current")
+	if not other_pages:
+		pass
+	else:
+		#on determine combien il y a de page
+		other_page = other_pages.text.strip()
+		nombre_page = other_page[len(other_page)-1:]
+		i = int(nombre_page)
+		while i > 1:
+			# on ajoute les différentes page dans une liste
+			url_section_liste.append(url_section.replace('index', 'page-' + str(i)))
+			i = i - 1
+
+	for x in url_section_liste:
+		reponse = requests.get(x)
+		page_produit = reponse.content
+		soup = BeautifulSoup(page_produit, 'html.parser')
+		#on va recuperer tout les h3 qui contiennent les url des pages produit
+		url_produits = soup.find_all('h3')	
+		i = 0
+		#dans chaque element trouvé, on recupere l'url href dans la balise <a>
+		for url_produit in url_produits:
+			url_produit = url_produits[i].a
+			links_produit.append("http://books.toscrape.com/catalogue/" + url_produit.get('href').replace('../', ''))
+			i = i + 1
+	
+	return links_produit
+
+def recup_data_produit(url):
+
 	reponse = requests.get(url)
 	page = reponse.content
 
 	#parse de la page en soup
 	soup = BeautifulSoup(page, "html.parser")
-
-	#recuperation des données
+	
 	#vérification multiple pour recupérer les données demandées
 	i=0
 	excract = soup.find_all("tr")
@@ -93,20 +127,14 @@ def etl():
 			none=y
 		i=i+1
 
-	i=0
-
 	# utilisation de la function rate pour recupérer la note
 	review_rating = rate(soup)
-
 	# recuperation du premier H1 qui correspond au titre
 	titre = soup.select('h1')[0].text
-
 	# recuperation de la description
 	description = soup.select('p')[3].text
-
 	# récupération de la categorie en 4eme lien
 	categorie = soup.select('a')[3].text
-
 	# recupération de l'url de l'image si src = titre
 	image_urls = soup.find_all('img', alt=titre)
 	links = []
@@ -114,35 +142,23 @@ def etl():
 		links.append("http://books.toscrape.com/" + image_url['src'].replace('../', ''))
 	image_url = links[0]
 	
-	#verif itération
-	'''
-	print(dir(url)
-	print(dir(upc)
-	print(dir(titre)
-	print(dir(price_incl)
-	print(dir(price_excl)
-	print(dir(number_available)
-	print(dir(description)
-	print(dir(categorie)
-	print(dir(review_rating)
-	print(dir(image_url)
-	'''
-	#verification des données
-	'''
-	print(url)
-	print(upc)
-	print(titre)
-	print(price_incl)
-	print(price_excl)
-	print(number_available)
-	print(description)
-	print(categorie)
-	print(review_rating)
-	print(image_url)
-	'''
-	ecriture('data.csv', url, upc, titre, price_incl, price_excl, number_available, description, categorie, review_rating, image_url)
-#	paragraphe = SoupStrainer("p")
-#	only_long_string = SoupStrainer(string=is_long_string)
-#	print(BeautifulSoup(page, "html.parser", parse_only=only_long_string).prettify())
+	data = [url, upc, titre, price_incl, price_excl, number_available, description, categorie, review_rating, image_url]
+	
+	return data
+
+def etl():
+	#page à recuperer
+	url_site = "http://books.toscrape.com/index.html"
+
+	url_sections = "http://books.toscrape.com/catalogue/category/books/classics_6/index.html"
+	url_produits = listing_url_page_produit(url_sections)
+
+	datas = []
+	for url_produit in url_produits:
+		datas.append(recup_data_produit(url_produit))
+	
+	#fonction ecriture pour enregistrer les datas dans un csv
+	ecriture(datas, 'data.csv')
+	
 
 etl()
