@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup, SoupStrainer
+from bs4 import BeautifulSoup
 import csv
 
 def parse(url):
@@ -28,40 +28,6 @@ def ecriture(datas, nom_fichier_section):
 		for data in datas:
 			writer.writerow(data)
 	pass
-	
-def rate(soup):
-	
-# on cherche uniquement la div qui inclut la note
-	div_rating = soup.find_all('div', class_='col-sm-6 product_main')
-	# puis la liste des <P> de cette div
-	p_rating = div_rating[0].find_all('p')
-# on cherche la classe qui indique la note
-	i=0
-	star = [['star-rating', 'Five'],['star-rating', 'Four'],['star-rating', 'Three'],['star-rating', 'Two'],['star-rating', 'One']]
-	note = ['5','4','3','2','1']
-	while i < len(p_rating):
-		tag = p_rating[i]
-		if tag['class'] == star[0]:
-			rating = note[0]
-			i = len	(p_rating)
-		elif tag['class'] == star[1]:
-			rating = note[1]
-			i = len	(p_rating)
-		elif tag['class'] == star[2]:
-			rating = note[2]
-			i = len	(p_rating)
-		elif tag['class'] == star[3]:
-			rating = note[3]
-			i = len	(p_rating)
-		elif tag['class'] == star[4]:
-			rating = note[4]
-			i = len	(p_rating)
-		else:
-			rating = "pas de note"	
-		i = i + 1
-		pass
-	return rating
-
 def listing_url_page_produit(url_section):
 
 	url_section_liste = []
@@ -119,7 +85,36 @@ def recup_data_produit(url):
 		i=i+1
 
 # utilisation de la function rate pour recupérer la note
-	review_rating = rate(soup)
+		# on cherche uniquement la div qui inclut la note
+	div_rating = soup.find_all('div', class_='col-sm-6 product_main')
+# puis la liste des <P> de cette div
+	p_rating = div_rating[0].find_all('p')
+# on cherche la classe qui indique la note
+	i = 0
+	star = [['star-rating', 'Five'], ['star-rating', 'Four'], ['star-rating', 'Three'], ['star-rating', 'Two'],
+			['star-rating', 'One']]
+	note = ['5', '4', '3', '2', '1']
+	while i < len(p_rating):
+		tag = p_rating[i]
+		if tag['class'] == star[0]:
+			rating = note[0]
+			i = len(p_rating)
+		elif tag['class'] == star[1]:
+			rating = note[1]
+			i = len(p_rating)
+		elif tag['class'] == star[2]:
+			rating = note[2]
+			i = len(p_rating)
+		elif tag['class'] == star[3]:
+			rating = note[3]
+			i = len(p_rating)
+		elif tag['class'] == star[4]:
+			rating = note[4]
+			i = len(p_rating)
+		else:
+			rating = "pas de note"
+		i = i + 1
+		pass
 # recuperation du premier H1 qui correspond au titre
 	titre = soup.select('h1')[0].text
 # recuperation de la description
@@ -132,7 +127,7 @@ def recup_data_produit(url):
 	for image_url in image_urls:
 		links.append("http://books.toscrape.com/" + image_url['src'].replace('../', ''))
 	image_url = links[0]
-	data = [url, upc, titre, price_incl, price_excl, number_available, description, categorie, review_rating, image_url]
+	data = [url, upc, titre, price_incl, price_excl, number_available, description, categorie, rating, image_url]
 	
 	return data
 
