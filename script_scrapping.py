@@ -1,6 +1,9 @@
+import os.path
+
 import requests
 from bs4 import BeautifulSoup
 import csv
+import urllib.request
 
 def parse(url):
 	reponse = requests.get(url)
@@ -128,7 +131,14 @@ def recup_data_produit(url):
 		links.append("http://books.toscrape.com/" + image_url['src'].replace('../', ''))
 	image_url = links[0]
 	data = [url, upc, titre, price_incl, price_excl, number_available, description, categorie, rating, image_url]
-	
+
+# enfin on enregistre l'image dans un dossier "img" que l'on créer s'il n'existe pas
+	file_path = "./img/"
+	if not os.path.exists(file_path):
+		os.makedirs(file_path)
+
+	urllib.request.urlretrieve(image_url, "./img/" + titre.replace(":" , "") + ".jpg")
+
 	return data
 
 def etl():
