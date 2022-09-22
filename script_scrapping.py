@@ -3,7 +3,10 @@ import os.path
 import requests
 from bs4 import BeautifulSoup
 import csv
+#enregistrement d'image
 import urllib.request
+#re.sub titre image
+import re
 
 def parse(url):
 	reponse = requests.get(url)
@@ -24,8 +27,14 @@ def ecriture(datas, nom_fichier_section):
 				,'category'
 				,'review_rating'
 				,'image_url']
+
+#creation du dossier data s'il n'existe pas
+	file_path_data = "./data/"
+	if not os.path.exists(file_path_data):
+		os.makedirs(file_path_data)
+
 # ecriture dans un fichier avec le nom de la section en cour + encoder en utf-8 pour eviter les erreurs de 'charmap'
-	with open(nom_fichier_section, 'w', encoding="utf-8") as fichier_csv:
+	with open(file_path_data + nom_fichier_section, 'w', encoding="utf-8") as fichier_csv:
 		writer = csv.writer(fichier_csv, delimiter=',')
 		writer.writerow(en_tete)
 		for data in datas:
@@ -130,17 +139,20 @@ def recup_data_produit(url):
 	for image_url in image_urls:
 		links.append("http://books.toscrape.com/" + image_url['src'].replace('../', ''))
 	image_url = links[0]
+
+#enregistrement de l'image dans un dossier "img" que l'on créer s'il n'existe pas
+	file_path_img = "./img/"
+	if not os.path.exists(file_path_img):
+		os.makedirs(file_path_img)
+# suppression des caracteres speciaux dans les titres d'images
+	titre_propre = re.sub('[^a-zA-Z0-9\n\. ]', '', titre)
+# enregistrement des images de page produit dans le dossier img
+	urllib.request.urlretrieve(image_url, "./img/" + titre_propre + ".jpg")
+
+# ajout des données récupérées dans DATA pour ensuite l'écrire dans un fichier
 	data = [url, upc, titre, price_incl, price_excl, number_available, description, categorie, rating, image_url]
 
-# enfin on enregistre l'image dans un dossier "img" que l'on créer s'il n'existe pas
-	file_path = "./img/"
-	if not os.path.exists(file_path):
-		os.makedirs(file_path)
-
-	urllib.request.urlretrieve(image_url, "./img/" + titre.replace(":" , "") + ".jpg")
-
 	return data
-
 def etl():
 
 # page à recuperer
