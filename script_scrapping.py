@@ -176,6 +176,7 @@ def etl():
 
 # enfin on enregistre les datas dans un csv au nom de la section
 			ecriture(datas, 'data_'+ titre_section.strip() +'.csv')
+			print('la catégorie "' + titre_section.strip() + '" est maintenant enregistrée.')
 			i = i +1
 		else:
 			pass
