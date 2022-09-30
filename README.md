@@ -48,6 +48,8 @@ Il récupère également l'image de chaque produit dans le dossier img
 - [x] Scrapp Catégorie de produit
 - [x] Scrapp Site complet
 - [x] Récupération des images de chaque produit
+- [ ] Compression des images
+- [ ] Sauvegarder l'état du scrapping
 - [ ] Interface Graphique avcec choix de recherche
     - [ ] Scrapping d'un livre
     - [ ] Scrapping d'une catégorie spécifique
